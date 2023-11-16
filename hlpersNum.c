@@ -1,17 +1,14 @@
 #include "shell.h"
 
-/* Function: lngString
- * --------------------
- * Converts a long integer to a string representation in the specified base.
- * Stores the result in the provided 'string' array.
+/**
+ * long_to_string - converts a number to a string.
+ * @number: number to be converten in an string.
+ * @string: buffer to save the number as string.
+ * @base: base to convert number
  *
- * Parameters:
- *   - number: The long integer to be converted.
- *   - string: Array to store the resulting string.
- *   - base: The base for the conversion (e.g., 10 for decimal, 16 for hexadecimal).
+ * Return: Nothing.
  */
-
-void lngString(long number, char *string, int base)
+void long_to_string(long number, char *string, int base)
 {
 	int index = 0, inNegative = 0;
 	long cociente = number;
@@ -35,25 +32,21 @@ void lngString(long number, char *string, int base)
 		string[index++] = '-';
 
 	string[index] = '\0';
-	strVerse(string);
+	str_reverse(string);
 }
 
-/* Function: _atoi
- * ----------------
- * Converts a string representation of an integer to an actual integer.
- *
- * Parameters:
- *   - s: The string to be converted to an integer.
- *
- * Returns:
- *   The converted integer value.
- */
 
+/**
+ * _atoi - convert a string to an integer.
+ *
+ * @s: pointer to str origen.
+ * Return: int of string or 0.
+ */
 int _atoi(char *s)
 {
 	int sign = 1;
 	unsigned int number = 0;
-
+	/*1- analisys sign*/
 	while (!('0' <= *s && *s <= '9') && *s != '\0')
 	{
 		if (*s == '-')
@@ -63,7 +56,7 @@ int _atoi(char *s)
 		s++;
 	}
 
-
+	/*2 - extract the number */
 	while ('0' <= *s && *s <= '9' && *s != '\0')
 	{
 
@@ -73,19 +66,14 @@ int _atoi(char *s)
 	return (number * sign);
 }
 
-/* Function: countChar
- * --------------------
- * Counts the occurrences of a specific character in a string.
+/**
+ * count_characters - count the coincidences of character in string.
  *
- * Parameters:
- *   - string: The input string to be checked.
- *   - character: The character whose occurrences are counted.
- *
- * Returns:
- *   The count of occurrences of the specified character in the string.
+ * @string: pointer to str origen.
+ * @character: string with  chars to be counted
+ * Return: int of string or 0.
  */
-
-int countChar(char *string, char *character)
+int count_characters(char *string, char *character)
 {
 	int i = 0, counter = 0;
 
@@ -96,4 +84,3 @@ int countChar(char *string, char *character)
 	}
 	return (counter);
 }
-

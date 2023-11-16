@@ -1,38 +1,35 @@
 #include "shell.h"
 
-/* Function: expVar
- * ----------------
- * Expands environment variables in the input line of the ARWEAVE structure.
- * Supports expansion of special variables like $? and $$.
+/**
+ * expand_variables - expand variables
+ * @data: a pointer to a struct of the program's data
  *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing input line information.
+ * Return: nothing, but sets errno.
  */
-
-void expVar(ARWEAVE *data)
+void expand_variables(data_of_program *data)
 {
 	int i, j;
 	char line[BUFFER_SIZE] = {0}, expansion[BUFFER_SIZE] = {'\0'}, *temp;
 
-	if (data->inputLine == NULL)
+	if (data->input_line == NULL)
 		return;
-	buff_Add(line, data->inputLine);
+	buffer_add(line, data->input_line);
 	for (i = 0; line[i]; i++)
 		if (line[i] == '#')
 			line[i--] = '\0';
 		else if (line[i] == '$' && line[i + 1] == '?')
 		{
 			line[i] = '\0';
-			lngString(errno, expansion, 10);
-			buff_Add(line, expansion);
-			buff_Add(line, data->inputLine + i + 2);
+			long_to_string(errno, expansion, 10);
+			buffer_add(line, expansion);
+			buffer_add(line, data->input_line + i + 2);
 		}
 		else if (line[i] == '$' && line[i + 1] == '$')
 		{
 			line[i] = '\0';
-			lngString(getpid(), expansion, 10);
-			buff_Add(line, expansion);
-			buff_Add(line, data->inputLine + i + 2);
+			long_to_string(getpid(), expansion, 10);
+			buffer_add(line, expansion);
+			buffer_add(line, data->input_line + i + 2);
 		}
 		else if (line[i] == '$' && (line[i + 1] == ' ' || line[i + 1] == '\0'))
 			continue;
@@ -40,36 +37,34 @@ void expVar(ARWEAVE *data)
 		{
 			for (j = 1; line[i + j] && line[i + j] != ' '; j++)
 				expansion[j - 1] = line[i + j];
-			temp = environKey(expansion, data);
+			temp = env_get_key(expansion, data);
 			line[i] = '\0', expansion[0] = '\0';
-			buff_Add(expansion, line + i + j);
-			temp ? buff_Add(line, temp) : 1;
-			buff_Add(line, expansion);
+			buffer_add(expansion, line + i + j);
+			temp ? buffer_add(line, temp) : 1;
+			buffer_add(line, expansion);
 		}
-	if (!strComp(data->inputLine, line, 0))
+	if (!str_compare(data->input_line, line, 0))
 	{
-		free(data->inputLine);
-		data->inputLine = strDuplicate(line);
+		free(data->input_line);
+		data->input_line = str_duplicate(line);
 	}
 }
 
-/* Function: expAlias
- * ------------------
- * Expands aliases in the input line of the ARWEAVE structure.
+/**
+ * expand_alias - expans aliases
+ * @data: a pointer to a struct of the program's data
  *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing input line information.
+ * Return: nothing, but sets errno.
  */
-
-void expAlias(ARWEAVE *data)
+void expand_alias(data_of_program *data)
 {
 	int i, j, was_expanded = 0;
 	char line[BUFFER_SIZE] = {0}, expansion[BUFFER_SIZE] = {'\0'}, *temp;
 
-	if (data->inputLine == NULL)
+	if (data->input_line == NULL)
 		return;
 
-	buff_Add(line, data->inputLine);
+	buffer_add(line, data->input_line);
 
 	for (i = 0; line[i]; i++)
 	{
@@ -77,43 +72,37 @@ void expAlias(ARWEAVE *data)
 			expansion[j] = line[i + j];
 		expansion[j] = '\0';
 
-		temp = getAlias(data, expansion);
+		temp = get_alias(data, expansion);
 		if (temp)
 		{
 			expansion[0] = '\0';
-			buff_Add(expansion, line + i + j);
+			buffer_add(expansion, line + i + j);
 			line[i] = '\0';
-			buff_Add(line, temp);
-			line[strLength(line)] = '\0';
-			buff_Add(line, expansion);
+			buffer_add(line, temp);
+			line[str_length(line)] = '\0';
+			buffer_add(line, expansion);
 			was_expanded = 1;
 		}
 		break;
 	}
 	if (was_expanded)
 	{
-		free(data->inputLine);
-		data->inputLine = strDuplicate(line);
+		free(data->input_line);
+		data->input_line = str_duplicate(line);
 	}
 }
 
-/* Function: buff_Add
- * -------------------
- * Appends a string to the end of a buffer.
- *
- * Parameters:
- *   - buffer: The buffer to which the string is appended.
- *   - str_to_add: The string to append to the buffer.
- *
- * Returns:
- *   - Returns the length of the buffer after the addition.
+/**
+ * buffer_add - append string at end of the buffer
+ * @buffer: buffer to be filled
+ * @str_to_add: string to be copied in the buffer
+ * Return: nothing, but sets errno.
  */
-
-int buff_Add(char *buffer, char *str_to_add)
+int buffer_add(char *buffer, char *str_to_add)
 {
 	int length, i;
 
-	length = strLength(buffer);
+	length = str_length(buffer);
 	for (i = 0; str_to_add[i]; i++)
 	{
 		buffer[length + i] = str_to_add[i];
@@ -121,4 +110,3 @@ int buff_Add(char *buffer, char *str_to_add)
 	buffer[length + i] = '\0';
 	return (length + i);
 }
-

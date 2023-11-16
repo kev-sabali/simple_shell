@@ -1,66 +1,55 @@
 #include "shell.h"
-/* Function: cmdExit
- * ------------------
- * Implements the 'exit' command. Exits the shell with the specified exit code.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing tokens, command name, etc.
- *
- * Returns:
- *   - Does not return, as it exits the program with the specified exit code.
+
+/**
+ * builtin_exit - exit of the program with the status
+ * @data: struct for the program's data
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-
-int cmdExit(ARWEAVE *data)
+int builtin_exit(data_of_program *data)
 {
 	int i;
 
 	if (data->tokens[1] != NULL)
-	{
+	{/*if exists arg for exit, check if is a number*/
 		for (i = 0; data->tokens[1][i]; i++)
 			if ((data->tokens[1][i] < '0' || data->tokens[1][i] > '9')
 				&& data->tokens[1][i] != '+')
-			{
+			{/*if is not a number*/
 				errno = 2;
 				return (2);
 			}
 		errno = _atoi(data->tokens[1]);
 	}
-	freeData_all(data);
+	free_all_data(data);
 	exit(errno);
 }
-/* Function: cmdCd
- * ----------------
- * Implements the 'cd' command. Changes the current working directory.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing tokens, command name, etc.
- *
- * Returns:
- *   - Returns 0 on success, 3 if changing directory fails.
- */
 
-int cmdCd(ARWEAVE *data)
+/**
+ * builtin_cd - change the current directory
+ * @data: struct for the program's data
+ * Return: zero if sucess, or other number if its declared in the arguments
+ */
+int builtin_cd(data_of_program *data)
 {
-	char *dir_home = environKey("HOME", data), *dir_old = NULL;
+	char *dir_home = env_get_key("HOME", data), *dir_old = NULL;
 	char old_dir[128] = {0};
 	int error_code = 0;
 
 	if (data->tokens[1])
 	{
-		if (strComp(data->tokens[1], "-", 0))
+		if (str_compare(data->tokens[1], "-", 0))
 		{
-			dir_old = environKey("OLDPWD", data);
+			dir_old = env_get_key("OLDPWD", data);
 			if (dir_old)
-				error_code = setWork_dir(data, dir_old);
-			_puts(environKey("PWD", data));
-			_puts("\n");
+				error_code = set_work_directory(data, dir_old);
+			_print(env_get_key("PWD", data));
+			_print("\n");
 
 			return (error_code);
 		}
 		else
 		{
-			return (setWork_dir(data, data->tokens[1]));
+			return (set_work_directory(data, data->tokens[1]));
 		}
 	}
 	else
@@ -68,31 +57,25 @@ int cmdCd(ARWEAVE *data)
 		if (!dir_home)
 			dir_home = getcwd(old_dir, 128);
 
-		return (setWork_dir(data, dir_home));
+		return (set_work_directory(data, dir_home));
 	}
 	return (0);
 }
 
-/* Function: setWork_dir
- * ----------------------
- * Sets the current working directory and updates environment variables.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing tokens, command name, etc.
- *   - new_dir: The directory to change to.
- *
- * Returns:
- *   - Returns 0 on success, 3 if changing directory fails.
+/**
+ * set_work_directory - set the work directory
+ * @data: struct for the program's data
+ * @new_dir: path to be set as work directory
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-int setWork_dir(ARWEAVE *data, char *new_dir)
+int set_work_directory(data_of_program *data, char *new_dir)
 {
 	char old_dir[128] = {0};
 	int err_code = 0;
 
 	getcwd(old_dir, 128);
 
-	if (!strComp(old_dir, new_dir, 0))
+	if (!str_compare(old_dir, new_dir, 0))
 	{
 		err_code = chdir(new_dir);
 		if (err_code == -1)
@@ -100,24 +83,18 @@ int setWork_dir(ARWEAVE *data, char *new_dir)
 			errno = 2;
 			return (3);
 		}
-		environSet_key("PWD", new_dir, data);
+		env_set_key("PWD", new_dir, data);
 	}
-	environSet_key("OLDPWD", old_dir, data);
+	env_set_key("OLDPWD", old_dir, data);
 	return (0);
 }
 
-/* Function: cmdHelp
- * -------------------
- * Implements the 'help' command. Displays help messages for different commands.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing tokens, command name, etc.
- *
- * Returns:
- *   - Returns 1 on success, 0 if the provided command is not recognized.
+/**
+ * builtin_help - shows the environment where the shell runs
+ * @data: struct for the program's data
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-int cmdHelp(ARWEAVE *data)
+int builtin_help(data_of_program *data)
 {
 	int i, length = 0;
 	char *mensajes[6] = {NULL};
@@ -127,13 +104,13 @@ int cmdHelp(ARWEAVE *data)
 	/* validate args */
 	if (data->tokens[1] == NULL)
 	{
-		_puts(mensajes[0] + 6);
+		_print(mensajes[0] + 6);
 		return (1);
 	}
 	if (data->tokens[2] != NULL)
 	{
 		errno = E2BIG;
-		perror(data->cmdName);
+		perror(data->command_name);
 		return (5);
 	}
 	mensajes[1] = HELP_EXIT_MSG;
@@ -144,47 +121,40 @@ int cmdHelp(ARWEAVE *data)
 
 	for (i = 0; mensajes[i]; i++)
 	{
-
-		length = strLength(data->tokens[1]);
-		if (strComp(data->tokens[1], mensajes[i], length))
+		/*print the length of string */
+		length = str_length(data->tokens[1]);
+		if (str_compare(data->tokens[1], mensajes[i], length))
 		{
-			_puts(mensajes[i] + length + 1);
+			_print(mensajes[i] + length + 1);
 			return (1);
 		}
 	}
-
+	/*if there is no match, print error and return -1 */
 	errno = EINVAL;
-	perror(data->cmdName);
+	perror(data->command_name);
 	return (0);
 }
 
-/* Function: cmdAlias
- * --------------------
- * Implements the 'alias' command. Displays or sets aliases.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing tokens, command name, etc.
- *
- * Returns:
- *   - Returns 0 on success.
+/**
+ * builtin_alias - add, remove or show aliases
+ * @data: struct for the program's data
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-int cmdAlias(ARWEAVE *data)
+int builtin_alias(data_of_program *data)
 {
 	int i = 0;
 
-
+	/* if there are no arguments, print all environment */
 	if (data->tokens[1] == NULL)
-		return (prntAlias(data, NULL));
+		return (print_alias(data, NULL));
 
 	while (data->tokens[++i])
-	{
-		if (countChar(data->tokens[i], "="))
-			setAlias(data->tokens[i], data);
+	{/* if there are arguments, set or print each env variable*/
+		if (count_characters(data->tokens[i], "="))
+			set_alias(data->tokens[i], data);
 		else
-			prntAlias(data, data->tokens[i]);
+			print_alias(data, data->tokens[i]);
 	}
 
 	return (0);
 }
-

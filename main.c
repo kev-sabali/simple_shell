@@ -1,148 +1,154 @@
 #include "shell.h"
 
-/* Function: main
- * ---------------
- * The main entry point of the shell.
- *
- * Parameters:
- *   - argc: Number of command-line arguments.
- *   - argv: Array of command-line arguments.
- *   - env:  Array of environment variables.
- *
- * Returns:
- *   0 on successful execution.
+/**
+ * str_length - returns the length of a string.
+ * @string: pointer to string.
+ * Return: length of string.
  */
-int main(int argc, char *argv[], char *env[])
+int str_length(char *string)
 {
-	ARWEAVE data_struct = 
-{
-	.prgName = NULL,
-	.inputLine = NULL,
-	.cmdName = NULL,
-	.xCounter = 0,
-	.fileDesc = 0,
-	.tokens = NULL,
-	.env = NULL,
-	.aliasList = NULL
-};	ARWEAVE*data = &data_struct;
-	char *prompt = "";
+	int length = 0;
 
-	iniData(data, argc, argv, env);
+	if (string == NULL)
+		return (0);
 
-	signal(SIGINT, hnldControl);
-
-	if (isatty(STDIN_FILENO) && isatty(STDOUT_FILENO) && argc == 1)
+	while (string[length++] != '\0')
 	{
-		errno = 2;/*???????*/
-		prompt = PROMPT_MSG;
 	}
-	errno = 0;
-	loopInfinite(prompt, data);
-	return (0);
+	return (--length);
 }
 
-
-/* Function: hnldControl
- * ---------------------
- * Signal handler for SIGINT (Ctrl+C).
- *
- * Parameters:
- *   - opr: Signal number (unused).
+/**
+ * str_duplicate - duplicates an string
+ * @string: String to be copied
+ * Return: pointer to the array
  */
-void hnldControl(int opr UNUSED)
+char *str_duplicate(char *string)
 {
-	_puts("\n");
-	_puts(PROMPT_MSG);
+	char *result;
+	int length, i;
+
+	if (string == NULL)
+		return (NULL);
+
+	length = str_length(string) + 1;
+
+	result = malloc(sizeof(char) * length);
+
+	if (result == NULL)
+	{
+		errno = ENOMEM;
+		perror("Error");
+		return (NULL);
+	}
+	for (i = 0; i < length ; i++)
+	{
+		result[i] = string[i];
+	}
+
+	return (result);
 }
 
-
-/* Function: iniData
- * ------------------
- * Initializes the data structure with default values.
- *
- * Parameters:
- *   - data: Pointer to the ARWEAVE structure.
- *   - argc: Number of command-line arguments.
- *   - argv: Array of command-line arguments.
- *   - env:  Array of environment variables.
+/**
+ * str_compare - Compare two strings
+ * @string1: String one, or the shorter
+ * @string2: String two, or the longer
+ * @number: number of characters to be compared, 0 if infinite
+ * Return: 1 if the strings are equals,0 if the strings are different
  */
-void iniData(ARWEAVE *data, int argc, char *argv[], char **env)
+int str_compare(char *string1, char *string2, int number)
 {
-	int i = 0;
+	int iterator;
 
-	data->prgName = argv[0];
-	data->inputLine = NULL;
-	data->cmdName = NULL;
-	data->xCounter = 0;
+	if (string1 == NULL && string2 == NULL)
+		return (1);
 
-	if (argc == 1)
-		data->fileDesc = STDIN_FILENO;
-	else
+	if (string1 == NULL || string2 == NULL)
+		return (0);
+
+	if (number == 0) /* infinite longitud */
 	{
-		data->fileDesc = open(argv[1], O_RDONLY);
-		if (data->fileDesc == -1)
+		if (str_length(string1) != str_length(string2))
+			return (0);
+		for (iterator = 0; string1[iterator]; iterator++)
 		{
-			_putchar(data->prgName);
-			_putchar(": 0: Can't open ");
-			_putchar(argv[1]);
-			_putchar("\n");
-			exit(127);
+			if (string1[iterator] != string2[iterator])
+				return (0);
 		}
+		return (1);
 	}
-	data->tokens = NULL;
-	data->env = malloc(sizeof(char *) * 50);
-	if (env)
+	else /* if there is a number of chars to be compared */
 	{
-		for (; env[i]; i++)
+		for (iterator = 0; iterator < number ; iterator++)
 		{
-			data->env[i] = strDuplicate(env[i]);
+			if (string1[iterator] != string2[iterator])
+			return (0);
 		}
-	}
-	data->env[i] = NULL;
-	env = data->env;
-
-	data->aliasList = malloc(sizeof(char *) * 20);
-	for (i = 0; i < 20; i++)
-	{
-		data->aliasList[i] = NULL;
+		return (1);
 	}
 }
 
-/* Function: loopInfinite
- * -----------------------
- * The main loop for the shell, processing user input.
+/**
+ * str_concat - concatenates two strings.
+ * @string1: String to be concatenated
+ * @string2: String to be concatenated
  *
- * Parameters:
- *   - prompt: The shell prompt.
- *   - data:   Pointer to the ARWEAVE structure.
+ * Return: pointer to the array
  */
-void loopInfinite(char *prompt, ARWEAVE *data)
+char *str_concat(char *string1, char *string2)
 {
-	int error_code = 0, string_len = 0;
+	char *result;
+	int length1 = 0, length2 = 0;
 
-	while (++(data->xCounter))
+	if (string1 == NULL)
+		string1 = "";
+	length1 = str_length(string1);
+
+	if (string2 == NULL)
+		string2 = "";
+	length2 = str_length(string2);
+
+	result = malloc(sizeof(char) * (length1 + length2 + 1));
+	if (result == NULL)
 	{
-		_puts(prompt);
-		error_code = string_len = _getline(data);
-
-		if (error_code == EOF)
-		{
-			freeData_all(data);
-			exit(errno);
-		}
-		if (string_len >= 1)
-		{
-			expAlias(data);
-			expVar(data);
-			tokenise(data);
-			if (data->tokens[0])
-			{
-				error_code = _exe(data);
-				if (error_code != 0)
-					_printErr(error_code, data);
-			}
-			freeData(data);
-		}
+		errno = ENOMEM;
+		perror("Error");
+		return (NULL);
 	}
+
+	/* copy of string1 */
+	for (length1 = 0; string1[length1] != '\0'; length1++)
+		result[length1] = string1[length1];
+	free(string1);
+
+	/* copy of string2 */
+	for (length2 = 0; string2[length2] != '\0'; length2++)
+	{
+		result[length1] = string2[length2];
+		length1++;
+	}
+
+	result[length1] = '\0';
+	return (result);
 }
 
+
+/**
+ * str_reverse - reverses a string.
+ *
+ * @string: pointer to string.
+ * Return: void.
+ */
+void str_reverse(char *string)
+{
+
+	int i = 0, length = str_length(string) - 1;
+	char hold;
+
+	while (i < length)
+	{
+		hold = string[i];
+		string[i++] = string[length];
+		string[length--] = hold;
+	}
+}

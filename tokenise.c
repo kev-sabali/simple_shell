@@ -1,35 +1,26 @@
 #include "shell.h"
-
-/* Function: tokenise
- * -------------------
- * Tokenizes the input line in the ARWEAVE structure based on the specified delimiters.
- * Allocates memory for an array of tokens and updates the 'tokens' and 'cmdName' fields in the ARWEAVE structure.
- *
- * Parameters:
- *   - data: Pointer to the ARWEAVE structure containing information about the program state.
- *
- * Note:
- *   - The function uses space and tab characters (' ' and '\t') as delimiters.
- *   - The 'tokens' array is terminated with a NULL pointer.
- *   - Memory is allocated for each token and the cmdName field.
+/**
+ * tokenize - this function separate the string using a designed delimiter
+ * @data: a pointer to the program's data
+ * Return: an array of the different parts of the string
  */
-void tokenise(ARWEAVE *data)
+void tokenize(data_of_program *data)
 {
 	char *delimiter = " \t";
 	int i, j, counter = 2, length;
 
-	length = strLength(data->inputLine);
+	length = str_length(data->input_line);
 	if (length)
 	{
-		if (data->inputLine[length - 1] == '\n')
-			data->inputLine[length - 1] = '\0';
+		if (data->input_line[length - 1] == '\n')
+			data->input_line[length - 1] = '\0';
 	}
 
-	for (i = 0; data->inputLine[i]; i++)
+	for (i = 0; data->input_line[i]; i++)
 	{
 		for (j = 0; delimiter[j]; j++)
 		{
-			if (data->inputLine[i] == delimiter[j])
+			if (data->input_line[i] == delimiter[j])
 				counter++;
 		}
 	}
@@ -37,15 +28,14 @@ void tokenise(ARWEAVE *data)
 	data->tokens = malloc(counter * sizeof(char *));
 	if (data->tokens == NULL)
 	{
-		perror(data->prgName);
+		perror(data->program_name);
 		exit(errno);
 	}
 	i = 0;
-	data->tokens[i] = strDuplicate(_strtok(data->inputLine, delimiter));
-	data->cmdName = strDuplicate(data->tokens[0]);
+	data->tokens[i] = str_duplicate(_strtok(data->input_line, delimiter));
+	data->command_name = str_duplicate(data->tokens[0]);
 	while (data->tokens[i++])
 	{
-		data->tokens[i] = strDuplicate(_strtok(NULL, delimiter));
+		data->tokens[i] = str_duplicate(_strtok(NULL, delimiter));
 	}
 }
-

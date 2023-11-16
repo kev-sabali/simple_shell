@@ -1,21 +1,10 @@
 #include "shell.h"
-
-/* Function: _strtok
- * -----------------
- * Tokenizes a string using the specified delimiter. This function is a reentrant
- * version of strtok.
- *
- * Parameters:
- *   - line:  String to be tokenized (or NULL to continue tokenizing the last string).
- *   - delim: Delimiter characters.
- *
- * Returns:
- *   - A pointer to the next token in the string, or NULL if no more tokens are found.
- *
- * Note:
- *   - The function uses a static variable 'str' to keep track of the current position in the string.
- *   - Subsequent calls with NULL as the 'line' parameter continue tokenizing the same string.
- */
+/**
+ * _strtok - separates strings with delimiters
+ * @line: It´s pointer to array we receive in getline.
+ * @delim: It´s characters we mark off string in parts.
+ * Return: A pointer to the created token
+*/
 char *_strtok(char *line, char *delim)
 {
 	int j;
@@ -51,4 +40,3 @@ char *_strtok(char *line, char *delim)
 	}
 	return (copystr);
 }
-

@@ -1,84 +1,70 @@
 #include "shell.h"
 
-/* Function: _puts
- * ----------------
- * Writes a string to the standard output.
- *
- * Parameters:
- *   - string: The string to be written.
- *
- * Returns:
- *   The number of characters written.
+/**
+ * _print - writes a array of chars in the standar output
+ * @string: pointer to the array of chars
+ * Return: the number of bytes writed or .
+ * On error, -1 is returned, and errno is set appropriately.
  */
-int _puts(char *string)
+int _print(char *string)
 {
-	return (write(STDOUT_FILENO, string, strLength(string)));
+	return (write(STDOUT_FILENO, string, str_length(string)));
+}
+/**
+ * _printe - writes a array of chars in the standar error
+ * @string: pointer to the array of chars
+ * Return: the number of bytes writed or .
+ * On error, -1 is returned, and errno is set appropriately.
+ */
+int _printe(char *string)
+{
+	return (write(STDERR_FILENO, string, str_length(string)));
 }
 
-/* Function: _putchar
- * -------------------
- * Writes a string to the standard error output.
- *
- * Parameters:
- *   - string: The string to be written.
- *
- * Returns:
- *   The number of characters written.
+/**
+ * _print_error - writes a array of chars in the standart error
+ * @data: a pointer to the program's data'
+ * @errorcode: error code to print
+ * Return: the number of bytes writed or .
+ * On error, -1 is returned, and errno is set appropriately.
  */
-int _putchar(char *string)
-{
-	return (write(STDERR_FILENO, string, strLength(string)));
-}
-
-/* Function: _printErr
- * ---------------------
- * Prints error messages based on the error code and the data structure.
- *
- * Parameters:
- *   - errorcode: The error code indicating the type of error.
- *   - data: The data structure containing relevant information.
- *
- * Returns:
- *   Always returns 0.
- */
-int _printErr(int errorcode, ARWEAVE *data)
+int _print_error(int errorcode, data_of_program *data)
 {
 	char n_as_string[10] = {'\0'};
 
-	lngString((long) data->xCounter, n_as_string, 10);
+	long_to_string((long) data->exec_counter, n_as_string, 10);
 
 	if (errorcode == 2 || errorcode == 3)
 	{
-		_putchar(data->prgName);
-		_putchar(": ");
-		_putchar(n_as_string);
-		_putchar(": ");
-		_putchar(data->tokens[0]);
+		_printe(data->program_name);
+		_printe(": ");
+		_printe(n_as_string);
+		_printe(": ");
+		_printe(data->tokens[0]);
 		if (errorcode == 2)
-			_putchar(": Illegal number: ");
+			_printe(": Illegal number: ");
 		else
-			_putchar(": can't cd to ");
-		_putchar(data->tokens[1]);
-		_putchar("\n");
+			_printe(": can't cd to ");
+		_printe(data->tokens[1]);
+		_printe("\n");
 	}
 	else if (errorcode == 127)
 	{
-		_putchar(data->prgName);
-		_putchar(": ");
-		_putchar(n_as_string);
-		_putchar(": ");
-		_putchar(data->cmdName);
-		_putchar(": not found\n");
+		_printe(data->program_name);
+		_printe(": ");
+		_printe(n_as_string);
+		_printe(": ");
+		_printe(data->command_name);
+		_printe(": not found\n");
 	}
 	else if (errorcode == 126)
 	{
-		_putchar(data->prgName);
-		_putchar(": ");
-		_putchar(n_as_string);
-		_putchar(": ");
-		_putchar(data->cmdName);
-		_putchar(": Permission denied\n");
+		_printe(data->program_name);
+		_printe(": ");
+		_printe(n_as_string);
+		_printe(": ");
+		_printe(data->command_name);
+		_printe(": Permission denied\n");
 	}
 	return (0);
 }
-

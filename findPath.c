@@ -1,49 +1,30 @@
 #include "shell.h"
 
-/* Function: check_file
- * ---------------------
- * Checks if the given file at the specified full path exists and is executable.
- *
- * Parameters:
- *   - full_path: The full path of the file to check.
- *
- * Returns:
- *   - Returns 0 if the file exists and is executable, 126 if it is not executable,
- *     or 127 if the file does not exist.
- */
 int check_file(char *full_path);
 
-/* Function: identifyProgram
- * -------------------------
- * Identifies the program associated with the command name in the ARWEAVE structure.
- * Searches directories in the PATH environment variable for the executable file.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing command information.
- *
- * Returns:
- *   - Returns 0 if the program is found and executable, 126 if not executable,
- *     127 if the program is not found, or an error code if there are issues.
+/**
+ * find_program - find a program in path
+ * @data: a pointer to the program's data
+ * Return: 0 if success, errcode otherwise
  */
-
-int identifyProgram(ARWEAVE *data)
+int find_program(data_of_program *data)
 {
 	int i = 0, ret_code = 0;
 	char **directories;
 
-	if (!data->cmdName)
+	if (!data->command_name)
 		return (2);
 
-
-	if (data->cmdName[0] == '/' || data->cmdName[0] == '.')
-		return (check_file(data->cmdName));
+	/**if is a full_path or an executable in the same path */
+	if (data->command_name[0] == '/' || data->command_name[0] == '.')
+		return (check_file(data->command_name));
 
 	free(data->tokens[0]);
-	data->tokens[0] = strConcat(strDuplicate("/"), data->cmdName);
+	data->tokens[0] = str_concat(str_duplicate("/"), data->command_name);
 	if (!data->tokens[0])
 		return (2);
 
-	directories = tokenPath(data);
+	directories = tokenize_path(data);/* search in the PATH */
 
 	if (!directories || !directories[0])
 	{
@@ -51,67 +32,61 @@ int identifyProgram(ARWEAVE *data)
 		return (127);
 	}
 	for (i = 0; directories[i]; i++)
-	{
-		directories[i] = strConcat(directories[i], data->tokens[0]);
+	{/* appends the function_name to path */
+		directories[i] = str_concat(directories[i], data->tokens[0]);
 		ret_code = check_file(directories[i]);
 		if (ret_code == 0 || ret_code == 126)
-		{
+		{/* the file was found, is not a directory and has execute permisions*/
 			errno = 0;
 			free(data->tokens[0]);
-			data->tokens[0] = strDuplicate(directories[i]);
-			freeArray_p(directories);
+			data->tokens[0] = str_duplicate(directories[i]);
+			free_array_of_pointers(directories);
 			return (ret_code);
 		}
 	}
 	free(data->tokens[0]);
 	data->tokens[0] = NULL;
-	freeArray_p(directories);
+	free_array_of_pointers(directories);
 	return (ret_code);
 }
 
-/* Function: tokenPath
- * --------------------
- * Tokenizes the PATH environment variable into an array of directory paths.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing environment information.
- *
- * Returns:
- *   - Returns an array of directory paths from the PATH environment variable.
+/**
+ * tokenize_path - tokenize the path in directories
+ * @data: a pointer to the program's data
+ * Return: array of path directories
  */
-
-char **tokenPath(ARWEAVE *data)
+char **tokenize_path(data_of_program *data)
 {
 	int i = 0;
 	int counter_directories = 2;
 	char **tokens = NULL;
 	char *PATH;
 
-
-	PATH = environKey("PATH", data);
+	/* get the PATH value*/
+	PATH = env_get_key("PATH", data);
 	if ((PATH == NULL) || PATH[0] == '\0')
-	{
+	{/*path not found*/
 		return (NULL);
 	}
 
-	PATH = strDuplicate(PATH);
+	PATH = str_duplicate(PATH);
 
-
+	/* find the number of directories in the PATH */
 	for (i = 0; PATH[i]; i++)
 	{
 		if (PATH[i] == ':')
 			counter_directories++;
 	}
 
-
+	/* reserve space for the array of pointers */
 	tokens = malloc(sizeof(char *) * counter_directories);
 
-
+	/*tokenize and duplicate each token of path*/
 	i = 0;
-	tokens[i] = strDuplicate(_strtok(PATH, ":"));
+	tokens[i] = str_duplicate(_strtok(PATH, ":"));
 	while (tokens[i++])
 	{
-		tokens[i] = strDuplicate(_strtok(NULL, ":"));
+		tokens[i] = str_duplicate(_strtok(NULL, ":"));
 	}
 
 	free(PATH);
@@ -120,18 +95,12 @@ char **tokenPath(ARWEAVE *data)
 
 }
 
-/* Function: check_file
- * ---------------------
- * Checks if the given file at the specified full path exists and is executable.
- *
- * Parameters:
- *   - full_path: The full path of the file to check.
- *
- * Returns:
- *   - Returns 0 if the file exists and is executable, 126 if it is not executable,
- *     or 127 if the file does not exist.
+/**
+ * check_file - checks if exists a file, if it is not a dairectory and
+ * if it has excecution permisions for permisions.
+ * @full_path: pointer to the full file name
+ * Return: 0 on success, or error code if it exists.
  */
-
 int check_file(char *full_path)
 {
 	struct stat sb;
@@ -145,8 +114,7 @@ int check_file(char *full_path)
 		}
 		return (0);
 	}
-
+	/*if not exist the file*/
 	errno = 127;
 	return (127);
 }
-

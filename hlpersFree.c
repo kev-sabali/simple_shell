@@ -1,59 +1,48 @@
 #include "shell.h"
 
-/* Function: freeData
- * -------------------
- * Frees the memory allocated for the ARWEAVE structure's tokens, inputLine, and cmdName.
- * Resets the corresponding pointers to NULL.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure.
+/**
+ * free_recurrent_data - free the fields needed each loop
+ * @data: struct of the program's data
+ * Return: Nothing
  */
-
-void freeData(ARWEAVE *data)
+void free_recurrent_data(data_of_program *data)
 {
 	if (data->tokens)
-		freeArray_p(data->tokens);
-	if (data->inputLine)
-		free(data->inputLine);
-	if (data->cmdName)
-		free(data->cmdName);
+		free_array_of_pointers(data->tokens);
+	if (data->input_line)
+		free(data->input_line);
+	if (data->command_name)
+		free(data->command_name);
 
-	data->inputLine = NULL;
-	data->cmdName = NULL;
+	data->input_line = NULL;
+	data->command_name = NULL;
 	data->tokens = NULL;
 }
 
-/* Function: freeData_all
- * -----------------------
- * Frees the memory allocated for the ARWEAVE structure's tokens, inputLine, cmdName,
- * env, and aliasList. Also, closes the file descriptor if it's not the default (0).
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure.
+/**
+ * free_all_data - free all field of the data
+ * @data: struct of the program's data
+ * Return: Nothing
  */
-
-void freeData_all(ARWEAVE *data)
+void free_all_data(data_of_program *data)
 {
-	if (data->fileDesc != 0)
+	if (data->file_descriptor != 0)
 	{
-		if (close(data->fileDesc))
-			perror(data->prgName);
+		if (close(data->file_descriptor))
+			perror(data->program_name);
 	}
-	freeData(data);
-	freeArray_p(data->env);
-	freeArray_p(data->aliasList);
+	free_recurrent_data(data);
+	free_array_of_pointers(data->env);
+	free_array_of_pointers(data->alias_list);
 }
 
-/* Function: freeArray_p
- * ----------------------
- * Frees the memory allocated for a dynamically allocated string array.
- * Resets the array pointer to NULL.
- *
- * Parameters:
- *   - array: Pointer to a dynamically allocated string array.
+/**
+ * free_array_of_pointers - frees each pointer of an array of pointers and the
+ * array too
+ * @array: array of pointers
+ * Return: nothing
  */
-
-void freeArray_p(char **array)
+void free_array_of_pointers(char **array)
 {
 	int i;
 
@@ -66,4 +55,3 @@ void freeArray_p(char **array)
 		array = NULL;
 	}
 }
-

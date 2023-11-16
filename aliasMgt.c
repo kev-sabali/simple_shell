@@ -1,41 +1,35 @@
 #include "shell.h"
-/* Function: prntAlias
- * ---------------------
- * Prints aliases from the aliasList in the ARWEAVE structure. If 'alias' is provided,
- * prints only the matching aliases. Each alias is printed in the format 'alias=value'.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing aliasList.
- *   - alias: The specific alias to print (optional, can be NULL to print all aliases).
- *
- * Returns:
- *   - Always returns 0.
- */
 
-int prntAlias(ARWEAVE *data, char *alias)
+/**
+ * print_alias - add, remove or show aliases
+ * @data: struct for the program's data
+ * @alias: name of the alias to be printed
+ * Return: zero if sucess, or other number if its declared in the arguments
+ */
+int print_alias(data_of_program *data, char *alias)
 {
 	int i, j, alias_length;
 	char buffer[250] = {'\0'};
 
-	if (data->aliasList)
+	if (data->alias_list)
 	{
-		alias_length = strLength(alias);
-		for (i = 0; data->aliasList[i]; i++)
+		alias_length = str_length(alias);
+		for (i = 0; data->alias_list[i]; i++)
 		{
-			if (!alias || (strComp(data->aliasList[i], alias, alias_length)
-				&&	data->aliasList[i][alias_length] == '='))
+			if (!alias || (str_compare(data->alias_list[i], alias, alias_length)
+				&&	data->alias_list[i][alias_length] == '='))
 			{
-				for (j = 0; data->aliasList[i][j]; j++)
+				for (j = 0; data->alias_list[i][j]; j++)
 				{
-					buffer[j] = data->aliasList[i][j];
-					if (data->aliasList[i][j] == '=')
+					buffer[j] = data->alias_list[i][j];
+					if (data->alias_list[i][j] == '=')
 						break;
 				}
 				buffer[j + 1] = '\0';
-				buff_Add(buffer, "'");
-				buff_Add(buffer, data->aliasList[i] + j + 1);
-				buff_Add(buffer, "'\n");
-				_puts(buffer);
+				buffer_add(buffer, "'");
+				buffer_add(buffer, data->alias_list[i] + j + 1);
+				buffer_add(buffer, "'\n");
+				_print(buffer);
 			}
 		}
 	}
@@ -43,88 +37,76 @@ int prntAlias(ARWEAVE *data, char *alias)
 	return (0);
 }
 
-/* Function: getAlias
- * -------------------
- * Retrieves the value associated with a given alias from the aliasList in the ARWEAVE structure.
- *
- * Parameters:
- *   - data: Pointer to an ARWEAVE structure containing aliasList.
- *   - name: The alias for which to retrieve the value.
- *
- * Returns:
- *   - Returns the value associated with the provided alias or NULL if not found.
+/**
+ * get_alias - add, remove or show aliases
+ * @data: struct for the program's data
+ * @name: name of the requested alias.
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-char *getAlias(ARWEAVE *data, char *name)
+char *get_alias(data_of_program *data, char *name)
 {
 	int i, alias_length;
 
-
-	if (name == NULL || data->aliasList == NULL)
+	/* validate the arguments */
+	if (name == NULL || data->alias_list == NULL)
 		return (NULL);
 
-	alias_length = strLength(name);
+	alias_length = str_length(name);
 
-	for (i = 0; data->aliasList[i]; i++)
-	{
-		if (strComp(name, data->aliasList[i], alias_length) &&
-			data->aliasList[i][alias_length] == '=')
-		{
-			return (data->aliasList[i] + alias_length + 1);
+	for (i = 0; data->alias_list[i]; i++)
+	{/* Iterates through the environ and check for coincidence of the varname */
+		if (str_compare(name, data->alias_list[i], alias_length) &&
+			data->alias_list[i][alias_length] == '=')
+		{/* returns the value of the key NAME=  when find it */
+			return (data->alias_list[i] + alias_length + 1);
 		}
 	}
-
+	/* returns NULL if did not find it */
 	return (NULL);
 
 }
 
-/* Function: setAlias
- * -------------------
- * Sets or updates an alias in the aliasList of the ARWEAVE structure.
- *
- * Parameters:
- *   - alias_string: The string containing the alias and its value (e.g., "alias=value").
- *   - data: Pointer to an ARWEAVE structure containing aliasList.
- *
- * Returns:
- *   - Returns 0 on success, 1 if alias_string or aliasList is NULL.
+/**
+ * set_alias - add, or override alias
+ * @alias_string: alias to be seted in the form (name='value')
+ * @data: struct for the program's data
+ * Return: zero if sucess, or other number if its declared in the arguments
  */
-
-int setAlias(char *alias_string, ARWEAVE *data)
+int set_alias(char *alias_string, data_of_program *data)
 {
 	int i, j;
 	char buffer[250] = {'0'}, *temp = NULL;
 
-
-	if (alias_string == NULL ||  data->aliasList == NULL)
+	/* validate the arguments */
+	if (alias_string == NULL ||  data->alias_list == NULL)
 		return (1);
-
+	/* Iterates alias to find = char */
 	for (i = 0; alias_string[i]; i++)
 		if (alias_string[i] != '=')
 			buffer[i] = alias_string[i];
 		else
-		{
-			temp = getAlias(data, alias_string + i + 1);
+		{/* search if the value of the alias is another alias */
+			temp = get_alias(data, alias_string + i + 1);
 			break;
 		}
 
-	for (j = 0; data->aliasList[j]; j++)
-		if (strComp(buffer, data->aliasList[j], i) &&
-			data->aliasList[j][i] == '=')
-		{
-			free(data->aliasList[j]);
+	/* Iterates through the alias list and check for coincidence of the varname */
+	for (j = 0; data->alias_list[j]; j++)
+		if (str_compare(buffer, data->alias_list[j], i) &&
+			data->alias_list[j][i] == '=')
+		{/* if the alias alredy exist */
+			free(data->alias_list[j]);
 			break;
 		}
 
-
+	/* add the alias */
 	if (temp)
-	{
-		buff_Add(buffer, "=");
-		buff_Add(buffer, temp);
-		data->aliasList[j] = strDuplicate(buffer);
+	{/* if the alias already exist */
+		buffer_add(buffer, "=");
+		buffer_add(buffer, temp);
+		data->alias_list[j] = str_duplicate(buffer);
 	}
-	else
-		data->aliasList[j] = strDuplicate(alias_string);
+	else /* if the alias does not exist */
+		data->alias_list[j] = str_duplicate(alias_string);
 	return (0);
 }
-
