@@ -12,7 +12,7 @@
  *   -1: The specified command is not a built-in.
  *   [Specific Return Values]: Result of the executed built-in command.
  */
-int builtins_list(ARWEAVE *data)
+int cmdList(ARWEAVE *data)
 {
 	int iterator;
 	command options[] = {
@@ -25,7 +25,6 @@ int builtins_list(ARWEAVE *data)
 		{"unsetenv",cmdUnset_env},
 		{NULL, NULL}
 	};
-
 
 	for (iterator = 0; options[iterator].builtin != NULL; iterator++)
 	{

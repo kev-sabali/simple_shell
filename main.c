@@ -14,7 +14,17 @@
  */
 int main(int argc, char *argv[], char *env[])
 {
-	ARWEAVE data_struct = {NULL}, *data = &data_struct;
+	ARWEAVE data_struct = 
+{
+	.prgName = NULL,
+	.inputLine = NULL,
+	.cmdName = NULL,
+	.xCounter = 0,
+	.fileDesc = 0,
+	.tokens = NULL,
+	.env = NULL,
+	.aliasList = NULL
+};	ARWEAVE*data = &data_struct;
 	char *prompt = "";
 
 	iniData(data, argc, argv, env);
