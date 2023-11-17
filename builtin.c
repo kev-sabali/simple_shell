@@ -7,7 +7,7 @@
  *  Return: exits with a given exit status
  *         (0) if info.argv[0] != "exit"
  */
-int _myexit(info_t *info)
+int _myexit(CommandInfo *info)
 {
 	int exitcheck;
 
@@ -16,16 +16,16 @@ int _myexit(info_t *info)
 		exitcheck = _erratoi(info->argv[1]);
 		if (exitcheck == -1)
 		{
-			info->status = 2;
-			print_error(info, "Illegal number: ");
+			info->stat = 2;
+			prntError(info, "Illegal number: ");
 			_eputs(info->argv[1]);
 			_eputchar('\n');
 			return (1);
 		}
-		info->err_num = _erratoi(info->argv[1]);
+		info->errorNum = _erratoi(info->argv[1]);
 		return (-2);
 	}
-	info->err_num = -1;
+	info->errorNum = -1;
 	return (-2);
 }
 
@@ -35,7 +35,7 @@ int _myexit(info_t *info)
  *          constant function prototype.
  *  Return: Always 0
  */
-int _mycd(info_t *info)
+int _mycd(CommandInfo *info)
 {
 	char *s, *dir, buffer[1024];
 	int chdir_ret;
@@ -68,13 +68,13 @@ int _mycd(info_t *info)
 		chdir_ret = chdir(info->argv[1]);
 	if (chdir_ret == -1)
 	{
-		print_error(info, "can't cd to ");
+		prntError(info, "can't cd to ");
 		_eputs(info->argv[1]), _eputchar('\n');
 	}
 	else
 	{
-		_setenv(info, "OLDPWD", _getenv(info, "PWD="));
-		_setenv(info, "PWD", getcwd(buffer, 1024));
+		_setEnviron(info, "OLDPWD", _getenv(info, "PWD="));
+		_setEnviron(info, "PWD", getcwd(buffer, 1024));
 	}
 	return (0);
 }
@@ -85,7 +85,7 @@ int _mycd(info_t *info)
  *          constant function prototype.
  *  Return: Always 0
  */
-int _myhelp(info_t *info)
+int _myhelp(CommandInfo *info)
 {
 	char **arg_array;
 
